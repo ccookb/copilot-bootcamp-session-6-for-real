@@ -31,7 +31,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify each principle against the planned feature. Mark ✅ Pass, ❌ Fail, or ⚠️ Risk.
+
+| # | Principle | Status | Notes |
+|---|-----------|--------|-------|
+| I | **Simplicity First** — Single responsibility; no YAGNI violations; no premature optimisation | ⬜ | |
+| II | **Test-First Development** — Tests written before/with implementation; ≥80% coverage planned; tests isolated and mocked | ⬜ | |
+| III | **Consistent Code Standards** — 2-space indent; naming conventions; ≤100 char lines; ESLint passes; no duplication | ⬜ | |
+| IV | **User-Centered Design** — Design system followed; light+dark mode supported; destructive actions confirmed; desktop-focused | ⬜ | |
+| V | **Defined Feature Scope** — All changes traceable to docs/functional-requirements.md; no out-of-scope features; backend persistence used | ⬜ | |
+
+> ❌ on any principle MUST be resolved before implementation begins.
+> Document any necessary violations in the Complexity Tracking table below.
 
 ## Project Structure
 
