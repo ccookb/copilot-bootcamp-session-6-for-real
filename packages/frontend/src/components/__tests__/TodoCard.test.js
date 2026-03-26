@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import TodoCard from '../TodoCard';
 
 describe('TodoCard Component', () => {
@@ -19,6 +19,12 @@ describe('TodoCard Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-01-01T00:00:00'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('should render todo title and due date', () => {
@@ -87,10 +93,9 @@ describe('TodoCard Component', () => {
 
   it('should apply completed class when todo is completed', () => {
     const completedTodo = { ...mockTodo, completed: 1 };
-    const { container } = render(<TodoCard todo={completedTodo} {...mockHandlers} isLoading={false} />);
+    render(<TodoCard todo={completedTodo} {...mockHandlers} isLoading={false} />);
     
-    const card = container.querySelector('.todo-card');
-    expect(card).toHaveClass('completed');
+    expect(screen.getByTestId('todo-card')).toHaveClass('completed');
   });
 
   it('should not render due date when dueDate is null', () => {
@@ -98,5 +103,164 @@ describe('TodoCard Component', () => {
     render(<TodoCard todo={todoNoDate} {...mockHandlers} isLoading={false} />);
     
     expect(screen.queryByText(/Due:/)).not.toBeInTheDocument();
+  });
+});
+
+describe('TodoCard - Overdue Indicator', () => {
+  const mockHandlers = {
+    onToggle: jest.fn(),
+    onEdit: jest.fn(),
+    onDelete: jest.fn()
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-03-25T10:00:00'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  // T002: overdue incomplete todo has .todo-card--overdue class
+  it('should have .todo-card--overdue class when incomplete and dueDate is before today', () => {
+    const overdueTodo = {
+      id: 2,
+      title: 'Overdue Todo',
+      dueDate: '2026-03-24',
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={overdueTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).toHaveClass('todo-card--overdue');
+  });
+
+  // T003: overdue incomplete todo renders "Overdue" badge text
+  it('should render "Overdue" badge when incomplete and dueDate is before today', () => {
+    const overdueTodo = {
+      id: 2,
+      title: 'Overdue Todo',
+      dueDate: '2026-03-24',
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={overdueTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByText('Overdue')).toBeInTheDocument();
+  });
+
+  // T004: completed todo with past due date does NOT have .todo-card--overdue class
+  it('should NOT have .todo-card--overdue class when completed even if dueDate is before today', () => {
+    const completedOverdueTodo = {
+      id: 3,
+      title: 'Completed Overdue Todo',
+      dueDate: '2026-03-24',
+      completed: 1,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={completedOverdueTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).not.toHaveClass('todo-card--overdue');
+  });
+
+  // T005: todo with dueDate equal to today does NOT have .todo-card--overdue class
+  it('should NOT have .todo-card--overdue class when dueDate is today', () => {
+    const dueTodayTodo = {
+      id: 4,
+      title: 'Due Today',
+      dueDate: '2026-03-25',
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={dueTodayTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).not.toHaveClass('todo-card--overdue');
+  });
+
+  // T006: todo with no due date does NOT have .todo-card--overdue class
+  it('should NOT have .todo-card--overdue class when dueDate is null', () => {
+    const noDateTodo = {
+      id: 5,
+      title: 'No Date Todo',
+      dueDate: null,
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={noDateTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).not.toHaveClass('todo-card--overdue');
+  });
+
+  // T007: overdue indicator disappears when todo is toggled to complete
+  it('should remove .todo-card--overdue class when todo is toggled to complete', () => {
+    const overdueTodo = {
+      id: 6,
+      title: 'Overdue Todo Toggle',
+      dueDate: '2026-03-24',
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    const { rerender } = render(<TodoCard todo={overdueTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).toHaveClass('todo-card--overdue');
+
+    const completedTodo = { ...overdueTodo, completed: 1 };
+    rerender(<TodoCard todo={completedTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).not.toHaveClass('todo-card--overdue');
+  });
+
+  // T011: overdue incomplete todo's due date element has .todo-due-date--overdue class
+  it('should have .todo-due-date--overdue class on due date when incomplete and overdue', () => {
+    const overdueTodo = {
+      id: 7,
+      title: 'Overdue Due Date Style',
+      dueDate: '2026-03-24',
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={overdueTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-due-date')).toHaveClass('todo-due-date--overdue');
+  });
+
+  // T012: completed todo with past due date does NOT have .todo-due-date--overdue class
+  it('should NOT have .todo-due-date--overdue class on due date when completed', () => {
+    const completedOverdueTodo = {
+      id: 8,
+      title: 'Completed Overdue Date Style',
+      dueDate: '2026-03-24',
+      completed: 1,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={completedOverdueTodo} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-due-date')).not.toHaveClass('todo-due-date--overdue');
+  });
+
+  // T015: timer auto-refresh test
+  it('should update overdue status after 60 seconds when time advances past midnight', () => {
+    // Start at 2026-03-25 23:59:00 — "today" is 2026-03-25, so 2026-03-25 is NOT overdue yet
+    jest.setSystemTime(new Date('2026-03-25T23:59:00'));
+    const todoNotYetOverdue = {
+      id: 9,
+      title: 'Becomes Overdue At Midnight',
+      dueDate: '2026-03-25',
+      completed: 0,
+      createdAt: '2026-01-01T00:00:00Z'
+    };
+    render(<TodoCard todo={todoNotYetOverdue} {...mockHandlers} isLoading={false} />);
+
+    expect(screen.getByTestId('todo-card')).not.toHaveClass('todo-card--overdue');
+
+    // Advance time to 2026-03-26 00:01:00 — now 2026-03-25 IS overdue
+    act(() => {
+      jest.setSystemTime(new Date('2026-03-26T00:01:00'));
+      jest.advanceTimersByTime(60_000);
+    });
+
+    expect(screen.getByTestId('todo-card')).toHaveClass('todo-card--overdue');
   });
 });

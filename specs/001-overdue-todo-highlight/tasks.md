@@ -18,7 +18,7 @@
 
 **Purpose**: Update project documentation to satisfy Constitution Principle V traceability gate before any implementation begins.
 
-- [ ] T001 Update `docs/functional-requirements.md` to add overdue display requirement under section 1.2 (View Todos) — required for Constitution V gate: all changes must be traceable to this document
+- [X] T001 Update `docs/functional-requirements.md` to add overdue display requirement under section 1.2 (View Todos) — required for Constitution V gate: all changes must be traceable to this document
 
 **Checkpoint**: Constitution V gate satisfied — implementation may now begin.
 
@@ -34,18 +34,18 @@
 
 > **Write these tests FIRST — ensure they FAIL before starting implementation (T008–T010)**
 
-- [ ] T002 [P] [US1] Add test: overdue incomplete todo has `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js` — mock `Date` to a fixed "today"; pass a `dueDate` of yesterday
-- [ ] T003 [P] [US1] Add test: overdue incomplete todo renders "Overdue" badge text in `packages/frontend/src/components/__tests__/TodoCard.test.js`
-- [ ] T004 [P] [US1] Add test: completed todo with past due date does NOT have `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
-- [ ] T005 [P] [US1] Add test: todo with `dueDate` equal to today does NOT have `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
-- [ ] T006 [P] [US1] Add test: todo with no due date does NOT have `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
-- [ ] T007 [US1] Add test: overdue indicator disappears when todo is toggled to complete — use `fireEvent.click` on checkbox and assert class is removed in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T002 [P] [US1] Add test: overdue incomplete todo has `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js` — mock `Date` to a fixed "today"; pass a `dueDate` of yesterday
+- [X] T003 [P] [US1] Add test: overdue incomplete todo renders "Overdue" badge text in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T004 [P] [US1] Add test: completed todo with past due date does NOT have `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T005 [P] [US1] Add test: todo with `dueDate` equal to today does NOT have `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T006 [P] [US1] Add test: todo with no due date does NOT have `.todo-card--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T007 [US1] Add test: overdue indicator disappears when todo is toggled to complete — use `fireEvent.click` on checkbox and assert class is removed in `packages/frontend/src/components/__tests__/TodoCard.test.js`
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Add `computeIsOverdue(dueDate, completed, now)` helper function and `now` state + 60-second `setInterval` auto-refresh in `packages/frontend/src/components/TodoCard.js` (see research.md D1, D2 for exact implementation patterns)
-- [ ] T009 [US1] Apply `.todo-card--overdue` CSS class to the card root `<div>` and render `<span className="overdue-badge">Overdue</span>` inside `.todo-content` when `isOverdue` is true in `packages/frontend/src/components/TodoCard.js`
-- [ ] T010 [US1] Add `.todo-card--overdue` (danger left border) and `.overdue-badge` (danger colour, small caps) CSS rules using `var(--danger-color)` token in `packages/frontend/src/App.css`
+- [X] T008 [US1] Add `computeIsOverdue(dueDate, completed, now)` helper function and `now` state + 60-second `setInterval` auto-refresh in `packages/frontend/src/components/TodoCard.js` (see research.md D1, D2 for exact implementation patterns)
+- [X] T009 [US1] Apply `.todo-card--overdue` CSS class to the card root `<div>` and render `<span className="overdue-badge">Overdue</span>` inside `.todo-content` when `isOverdue` is true in `packages/frontend/src/components/TodoCard.js`
+- [X] T010 [US1] Add `.todo-card--overdue` (danger left border) and `.overdue-badge` (danger colour, small caps) CSS rules using `var(--danger-color)` token in `packages/frontend/src/App.css`
 
 **Checkpoint**: User Story 1 fully functional — left border and "Overdue" badge visible; tests pass.
 
@@ -63,13 +63,13 @@
 
 > **Write these tests FIRST — ensure they FAIL before starting implementation (T013–T014)**
 
-- [ ] T011 [P] [US2] Add test: overdue incomplete todo's due date element has `.todo-due-date--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
-- [ ] T012 [P] [US2] Add test: completed todo with past due date does NOT have `.todo-due-date--overdue` class on due date element in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T011 [P] [US2] Add test: overdue incomplete todo's due date element has `.todo-due-date--overdue` class in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T012 [P] [US2] Add test: completed todo with past due date does NOT have `.todo-due-date--overdue` class on due date element in `packages/frontend/src/components/__tests__/TodoCard.test.js`
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Apply `.todo-due-date--overdue` CSS class to the `.todo-due-date` `<p>` element when `isOverdue` is true in `packages/frontend/src/components/TodoCard.js`
-- [ ] T014 [US2] Add `.todo-due-date--overdue { color: var(--danger-color); }` CSS rule to `packages/frontend/src/App.css`
+- [X] T013 [US2] Apply `.todo-due-date--overdue` CSS class to the `.todo-due-date` `<p>` element when `isOverdue` is true in `packages/frontend/src/components/TodoCard.js`
+- [X] T014 [US2] Add `.todo-due-date--overdue { color: var(--danger-color); }` CSS rule to `packages/frontend/src/App.css`
 
 **Checkpoint**: User Stories 1 AND 2 both complete — all visual overdue indicators (border, badge, date text) functional in both light and dark modes.
 
@@ -79,8 +79,8 @@
 
 **Purpose**: Auto-refresh behaviour, lint gate, and final validation.
 
-- [ ] T015 [P] Add timer auto-refresh test: use `jest.useFakeTimers()` + `jest.setSystemTime()` to assert `now` state updates after `jest.advanceTimersByTime(60_000)` causes a re-render with updated overdue status in `packages/frontend/src/components/__tests__/TodoCard.test.js`
-- [ ] T016 Verify ESLint passes with zero errors: `npm run lint` from `packages/frontend/` — resolve any warnings before opening a PR
+- [X] T015 [P] Add timer auto-refresh test: use `jest.useFakeTimers()` + `jest.setSystemTime()` to assert `now` state updates after `jest.advanceTimersByTime(60_000)` causes a re-render with updated overdue status in `packages/frontend/src/components/__tests__/TodoCard.test.js`
+- [X] T016 Verify ESLint passes with zero errors: `npm run lint` from `packages/frontend/` — resolve any warnings before opening a PR
 
 **Checkpoint**: All tests pass, coverage ≥80%, lint clean — ready for PR.
 

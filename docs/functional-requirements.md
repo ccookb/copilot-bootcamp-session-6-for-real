@@ -23,7 +23,13 @@ A simple, single-user todo application that allows users to create, manage, and 
   - Todo title
   - Due date (if set)
   - Completion status (checked/unchecked)
+  - Overdue indicator (danger-coloured left border and "Overdue" badge) for incomplete todos whose due date is strictly before today's local date
 - **Ordering**: Todos are displayed in order of creation date (newest first)
+- **Overdue Display Rules**:
+  - An incomplete todo is overdue when its `dueDate` is strictly before today's local date
+  - Completed todos never display an overdue indicator regardless of their due date
+  - Todos with no due date never display an overdue indicator
+  - The overdue state auto-refreshes at minimum once per minute so items transition to overdue without a page reload
 
 #### 1.3 Update Todo Status
 - **Description**: Users can mark a todo as complete or incomplete
