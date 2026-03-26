@@ -17,7 +17,7 @@ When a user views their todo list, items that are past their due date and still 
 
 **Acceptance Scenarios**:
 
-1. **Given** a todo with a due date of yesterday and a status of incomplete, **When** the user views the todo list, **Then** the todo item is displayed with a visual overdue indicator (distinct colour or label).
+1. **Given** a todo with a due date of yesterday and a status of incomplete, **When** the user views the todo list, **Then** the todo item is displayed with a visual overdue indicator: the danger colour AND a visible "Overdue" text label/badge.
 2. **Given** a todo with a due date of yesterday and a status of complete, **When** the user views the todo list, **Then** the todo item does NOT display an overdue indicator.
 3. **Given** a todo with a due date of today and a status of incomplete, **When** the user views the todo list, **Then** the todo item does NOT display an overdue indicator (today is not yet overdue).
 4. **Given** a todo with no due date set, **When** the user views the todo list, **Then** no overdue indicator is shown.
@@ -46,18 +46,20 @@ When a todo is overdue, the due date text itself should reflect the urgency so u
 - What if a todo's due date is exactly today? Today is NOT considered overdue — only dates strictly before today trigger the indicator.
 - What if a todo has no due date? No overdue indicator is shown; the absence of a due date means there is no deadline to be overdue against.
 - What if the user sets a due date to a past date when creating or editing a todo? The overdue indicator should appear immediately upon saving.
+- What if the app is open when midnight passes and a todo's due date is today? The overdue state MUST update automatically (no page refresh required); a periodic clock-tick check (at minimum once per minute) ensures items transition to overdue as soon as the date changes.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST visually distinguish incomplete todo items whose due date is strictly before the current local date.
+- **FR-001**: The system MUST visually distinguish incomplete todo items whose due date is strictly before the current local date by applying a danger-coloured left border to the todo card.
 - **FR-002**: The overdue visual indicator MUST be displayed without any user interaction (e.g., no hover or click required).
 - **FR-003**: Completed todo items MUST NOT display an overdue indicator, regardless of their due date.
 - **FR-004**: Todo items with no due date set MUST NOT display an overdue indicator.
-- **FR-005**: The overdue indicator MUST use the established danger/error colour from the design system (red: `#c62828` light mode, `#ef5350` dark mode) and MUST render correctly in both light and dark modes.
+- **FR-005**: The overdue visual indicator MUST use the established danger/error colour from the design system (red: `#c62828` light mode, `#ef5350` dark mode) applied as a left border on the todo card, and MUST render correctly in both light and dark modes. In addition to colour, a visible text label (e.g., "Overdue" badge) MUST be displayed to ensure the indicator is accessible to colour-blind users and screen readers.
 - **FR-006**: The overdue state MUST be recalculated and reflected immediately when a todo's completion status changes (e.g., marking complete removes the indicator instantly).
 - **FR-007**: When a todo is in an overdue state, the due date text MUST also be styled in the danger colour to reinforce the urgency.
+- **FR-008**: The overdue state MUST be recalculated automatically at runtime (e.g., via a periodic clock-tick check, at minimum once per minute) so that items whose due date passes while the app is open become overdue without requiring a page refresh.
 
 ### Key Entities
 
@@ -79,4 +81,12 @@ When a todo is overdue, the due date text itself should reflect the urgency so u
 - Filtering, sorting by overdue status, and bulk actions on overdue items are out of scope for this feature.
 - The existing danger colour tokens in the design system (`#c62828` / `#ef5350`) are the correct visual treatment; no new design tokens are introduced.
 - Both light mode and dark mode are in scope, consistent with the project's existing theme support.
+
+## Clarifications
+
+### Session 2026-03-25
+
+- Q: Should the overdue indicator include a non-colour cue in addition to the danger colour? → A: Text label — add a small "Overdue" badge/label alongside the colour.
+- Q: Should the overdue state update automatically if midnight passes while the app is open? → A: Yes, auto-refresh via periodic clock-tick check (at minimum once per minute).
+- Q: Where on the TodoCard should the card-level danger colour be applied? → A: Left border — a danger-coloured left border on the overdue card.
 
