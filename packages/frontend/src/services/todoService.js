@@ -47,14 +47,14 @@ class TodoService {
    * @param {string|null} dueDate - Optional due date in ISO format
    * @returns {Promise<Object>} Created todo object
    */
-  static async createTodo(title, dueDate = null) {
+  static async createTodo(title, dueDate = null, projectId = null) {
     try {
       const response = await fetch(`${API_BASE_URL}/todos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, dueDate }),
+        body: JSON.stringify({ title, dueDate, projectId }),
       });
 
       if (!response.ok) {
@@ -76,14 +76,18 @@ class TodoService {
    * @param {string|null} dueDate - New due date or null
    * @returns {Promise<Object>} Updated todo object
    */
-  static async updateTodo(id, title, dueDate = null) {
+  static async updateTodo(id, title, dueDate = null, projectId = undefined) {
     try {
+      const payload = { title, dueDate };
+      if (projectId !== undefined) {
+        payload.projectId = projectId;
+      }
       const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, dueDate }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

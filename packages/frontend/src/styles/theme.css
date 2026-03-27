@@ -33,6 +33,16 @@
 
   /* Transitions */
   --transition: all 0.2s ease;
+
+  /* Project colours — identity colours, invariant across themes */
+  --project-color-blue:   #2563eb;  --project-color-blue-text:   #ffffff;
+  --project-color-green:  #16a34a;  --project-color-green-text:  #ffffff;
+  --project-color-red:    #dc2626;  --project-color-red-text:    #ffffff;
+  --project-color-yellow: #ca8a04;  --project-color-yellow-text: #ffffff;
+  --project-color-purple: #7c3aed;  --project-color-purple-text: #ffffff;
+  --project-color-orange: #ea580c;  --project-color-orange-text: #ffffff;
+  --project-color-teal:   #0d9488;  --project-color-teal-text:   #ffffff;
+  --project-color-pink:   #db2777;  --project-color-pink-text:   #ffffff;
 }
 
 /* Dark Mode */

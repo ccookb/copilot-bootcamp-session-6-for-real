@@ -68,7 +68,7 @@ describe('TodoForm Component', () => {
     });
     
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('New Todo', null);
+      expect(mockOnSubmit).toHaveBeenCalledWith('New Todo', null, null);
     });
   });
 
@@ -89,7 +89,7 @@ describe('TodoForm Component', () => {
     });
     
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('New Todo', '2025-12-25');
+      expect(mockOnSubmit).toHaveBeenCalledWith('New Todo', '2025-12-25', null);
     });
   });
 
@@ -138,7 +138,7 @@ describe('TodoForm Component', () => {
     });
     
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('Test Todo', null);
+      expect(mockOnSubmit).toHaveBeenCalledWith('Test Todo', null, null);
     });
   });
 
@@ -154,5 +154,86 @@ describe('TodoForm Component', () => {
     fireEvent.change(input, { target: { value: 'Test' } });
     
     expect(screen.queryByText('Todo title cannot be empty')).not.toBeInTheDocument();
+  });
+});
+
+describe('TodoForm - Project Selector', () => {
+  const mockOnSubmit = jest.fn();
+  const mockProjects = [
+    { id: 1, title: 'Work', colour: 'blue' },
+    { id: 2, title: 'Personal', colour: 'green' },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should not render project selector when no projects are provided', () => {
+    render(<TodoForm onSubmit={mockOnSubmit} isLoading={false} />);
+    expect(screen.queryByRole('combobox', { name: /project/i })).not.toBeInTheDocument();
+  });
+
+  it('should render project selector when projects are provided', () => {
+    render(
+      <TodoForm onSubmit={mockOnSubmit} isLoading={false} projects={mockProjects} />
+    );
+    expect(screen.getByRole('combobox', { name: /project/i })).toBeInTheDocument();
+  });
+
+  it('should render "No project" option and all project options', () => {
+    render(
+      <TodoForm onSubmit={mockOnSubmit} isLoading={false} projects={mockProjects} />
+    );
+    expect(screen.getByRole('option', { name: 'No project' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Work' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Personal' })).toBeInTheDocument();
+  });
+
+  it('should use defaultProjectId as initial selection', () => {
+    render(
+      <TodoForm
+        onSubmit={mockOnSubmit}
+        isLoading={false}
+        projects={mockProjects}
+        defaultProjectId={1}
+      />
+    );
+    expect(screen.getByRole('combobox', { name: /project/i })).toHaveValue('1');
+  });
+
+  it('should call onSubmit with selected projectId', async () => {
+    mockOnSubmit.mockResolvedValue(undefined);
+    render(
+      <TodoForm onSubmit={mockOnSubmit} isLoading={false} projects={mockProjects} />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a new todo...'), {
+      target: { value: 'Work Todo' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: /project/i }), {
+      target: { value: '1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Add Todo/ }));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith('Work Todo', null, 1);
+    });
+  });
+
+  it('should call onSubmit with null when "No project" is selected', async () => {
+    mockOnSubmit.mockResolvedValue(undefined);
+    render(
+      <TodoForm onSubmit={mockOnSubmit} isLoading={false} projects={mockProjects} />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a new todo...'), {
+      target: { value: 'Unassigned Todo' },
+    });
+    // default is no project (empty value)
+    fireEvent.click(screen.getByRole('button', { name: /Add Todo/ }));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith('Unassigned Todo', null, null);
+    });
   });
 });

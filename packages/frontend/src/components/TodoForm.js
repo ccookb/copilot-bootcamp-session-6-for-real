@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 
-function TodoForm({ onSubmit, isLoading }) {
+function TodoForm({ onSubmit, isLoading, projects, defaultProjectId }) {
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [projectId, setProjectId] = useState(defaultProjectId || '');
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -20,9 +21,10 @@ function TodoForm({ onSubmit, isLoading }) {
 
     try {
       setError(null);
-      await onSubmit(title.trim(), dueDate || null);
+      await onSubmit(title.trim(), dueDate || null, projectId ? parseInt(projectId, 10) : null);
       setTitle('');
       setDueDate('');
+      setProjectId(defaultProjectId || '');
     } catch (err) {
       setError(err.message || 'Failed to create todo');
     }
@@ -60,6 +62,20 @@ function TodoForm({ onSubmit, isLoading }) {
           className="form-input"
           aria-label="Due date"
         />
+        {projects && projects.length > 0 && (
+          <select
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            disabled={isLoading}
+            className="form-input"
+            aria-label="Project"
+          >
+            <option value="">No project</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+        )}
         <button type="submit" disabled={isLoading} className="btn btn-primary">
           {isLoading ? 'Adding...' : 'Add Todo'}
         </button>

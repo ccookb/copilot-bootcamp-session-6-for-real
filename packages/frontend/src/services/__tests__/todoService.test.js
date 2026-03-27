@@ -76,7 +76,7 @@ describe('TodoService', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'New Todo', dueDate: null })
+        body: JSON.stringify({ title: 'New Todo', dueDate: null, projectId: null })
       });
       expect(result).toEqual(mockTodo);
     });
@@ -94,7 +94,7 @@ describe('TodoService', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'New Todo', dueDate: '2025-12-25' })
+        body: JSON.stringify({ title: 'New Todo', dueDate: '2025-12-25', projectId: null })
       });
       expect(result).toEqual(mockTodo);
     });

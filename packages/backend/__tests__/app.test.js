@@ -255,3 +255,252 @@ describe('Todo API Endpoints', () => {
     });
   });
 });
+
+describe('Projects API Endpoints', () => {
+  describe('GET /api/projects', () => {
+    it('should return empty array when no projects exist', async () => {
+      const response = await request(app).get('/api/projects');
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it('should return all projects after creation', async () => {
+      await request(app).post('/api/projects').send({ title: 'GetAll Project', colour: 'blue' });
+      const response = await request(app).get('/api/projects');
+      expect(response.status).toBe(200);
+      const found = response.body.find(p => p.title === 'GetAll Project');
+      expect(found).toBeDefined();
+      expect(found.colour).toBe('blue');
+    });
+  });
+
+  describe('POST /api/projects', () => {
+    it('should create a project with valid title and colour', async () => {
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Work', colour: 'blue' });
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.title).toBe('Work');
+      expect(response.body.colour).toBe('blue');
+      expect(response.body).toHaveProperty('createdAt');
+    });
+
+    it('should return 400 when title is missing', async () => {
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ colour: 'green' });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 when title is empty', async () => {
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ title: '', colour: 'green' });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 when title exceeds 100 characters', async () => {
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ title: 'a'.repeat(101), colour: 'blue' });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 when colour is missing', async () => {
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ title: 'No Colour Project' });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 when colour is invalid', async () => {
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Bad Colour', colour: 'magenta' });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 409 when title already exists (case-insensitive)', async () => {
+      await request(app).post('/api/projects').send({ title: 'DuplicateProj', colour: 'red' });
+      const response = await request(app)
+        .post('/api/projects')
+        .send({ title: 'duplicateproj', colour: 'teal' });
+      expect(response.status).toBe(409);
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('PUT /api/projects/:id', () => {
+    it('should update a project title', async () => {
+      const created = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Original Name', colour: 'purple' });
+      const id = created.body.id;
+
+      const response = await request(app)
+        .put(`/api/projects/${id}`)
+        .send({ title: 'Updated Name' });
+      expect(response.status).toBe(200);
+      expect(response.body.title).toBe('Updated Name');
+      expect(response.body.colour).toBe('purple');
+    });
+
+    it('should update a project colour', async () => {
+      const created = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Colour Changer', colour: 'pink' });
+      const id = created.body.id;
+
+      const response = await request(app)
+        .put(`/api/projects/${id}`)
+        .send({ colour: 'orange' });
+      expect(response.status).toBe(200);
+      expect(response.body.colour).toBe('orange');
+    });
+
+    it('should return 404 for non-existent project', async () => {
+      const response = await request(app)
+        .put('/api/projects/999999')
+        .send({ title: 'Ghost' });
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 for invalid ID', async () => {
+      const response = await request(app)
+        .put('/api/projects/invalid')
+        .send({ title: 'Test' });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 409 when updated title conflicts with another project', async () => {
+      await request(app).post('/api/projects').send({ title: 'Conflict Target', colour: 'blue' });
+      const created = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Will Conflict', colour: 'green' });
+      const id = created.body.id;
+
+      const response = await request(app)
+        .put(`/api/projects/${id}`)
+        .send({ title: 'Conflict Target' });
+      expect(response.status).toBe(409);
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('DELETE /api/projects/:id', () => {
+    it('should delete a project and return success message', async () => {
+      const created = await request(app)
+        .post('/api/projects')
+        .send({ title: 'ToDelete Project', colour: 'teal' });
+      const id = created.body.id;
+
+      const response = await request(app).delete(`/api/projects/${id}`);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message');
+    });
+
+    it('should unassign todos when project is deleted', async () => {
+      const projRes = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Will Be Deleted', colour: 'red' });
+      const projId = projRes.body.id;
+
+      const todoRes = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Assigned Todo', projectId: projId });
+      const todoId = todoRes.body.id;
+
+      await request(app).delete(`/api/projects/${projId}`);
+
+      const todo = await request(app).get(`/api/todos/${todoId}`);
+      expect(todo.body.projectId).toBeNull();
+    });
+
+    it('should return 404 for non-existent project', async () => {
+      const response = await request(app).delete('/api/projects/999999');
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 for invalid ID', async () => {
+      const response = await request(app).delete('/api/projects/invalid');
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('POST /api/todos with projectId', () => {
+    it('should create todo with valid projectId', async () => {
+      const projRes = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Todo Project', colour: 'green' });
+      const projId = projRes.body.id;
+
+      const response = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Project Todo', projectId: projId });
+      expect(response.status).toBe(201);
+      expect(response.body.projectId).toBe(projId);
+    });
+
+    it('should create todo with null projectId', async () => {
+      const response = await request(app)
+        .post('/api/todos')
+        .send({ title: 'No Project Todo', projectId: null });
+      expect(response.status).toBe(201);
+      expect(response.body.projectId).toBeNull();
+    });
+
+    it('should return 400 for non-existent projectId', async () => {
+      const response = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Bad Project Todo', projectId: 999999 });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('PUT /api/todos/:id with projectId', () => {
+    it('should assign projectId to existing todo', async () => {
+      const projRes = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Assign Project', colour: 'yellow' });
+      const projId = projRes.body.id;
+
+      const todoRes = await request(app).post('/api/todos').send({ title: 'Update Todo' });
+      const todoId = todoRes.body.id;
+
+      const response = await request(app)
+        .put(`/api/todos/${todoId}`)
+        .send({ projectId: projId });
+      expect(response.status).toBe(200);
+      expect(response.body.projectId).toBe(projId);
+    });
+
+    it('should remove projectId from todo when set to null', async () => {
+      const projRes = await request(app)
+        .post('/api/projects')
+        .send({ title: 'Remove Project', colour: 'pink' });
+      const projId = projRes.body.id;
+
+      const todoRes = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Assigned Todo', projectId: projId });
+      const todoId = todoRes.body.id;
+
+      const response = await request(app)
+        .put(`/api/todos/${todoId}`)
+        .send({ projectId: null });
+      expect(response.status).toBe(200);
+      expect(response.body.projectId).toBeNull();
+    });
+  });
+});

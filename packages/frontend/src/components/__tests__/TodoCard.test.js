@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import TodoCard from '../TodoCard';
 
 describe('TodoCard Component', () => {
@@ -262,5 +262,102 @@ describe('TodoCard - Overdue Indicator', () => {
     });
 
     expect(screen.getByTestId('todo-card')).toHaveClass('todo-card--overdue');
+  });
+});
+
+describe('TodoCard - Project Pill', () => {
+  const mockHandlers = {
+    onToggle: jest.fn(),
+    onEdit: jest.fn(),
+    onDelete: jest.fn()
+  };
+
+  const mockTodo = {
+    id: 1,
+    title: 'Test Todo',
+    dueDate: null,
+    completed: 0,
+    createdAt: '2025-01-01T00:00:00Z',
+    projectId: 1
+  };
+
+  const mockProject = { id: 1, title: 'Work', colour: 'blue' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-01-01T00:00:00'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('should render project pill when project prop is provided', () => {
+    render(
+      <TodoCard
+        todo={mockTodo}
+        {...mockHandlers}
+        isLoading={false}
+        project={mockProject}
+        projects={[mockProject]}
+      />
+    );
+    expect(screen.getByText('Work')).toBeInTheDocument();
+    expect(screen.getByText('Work')).toHaveClass('project-pill');
+  });
+
+  it('should not render project pill when project prop is null', () => {
+    render(
+      <TodoCard
+        todo={mockTodo}
+        {...mockHandlers}
+        isLoading={false}
+        project={null}
+        projects={[mockProject]}
+      />
+    );
+    expect(screen.queryByClass && screen.queryByRole('generic', { name: /Work/ })).toBeFalsy();
+    // pill element should not be present
+    const card = screen.getByTestId('todo-card');
+    expect(card.querySelector('.project-pill')).toBeNull();
+  });
+
+  it('should show project select in edit mode when projects are provided', () => {
+    render(
+      <TodoCard
+        todo={mockTodo}
+        {...mockHandlers}
+        isLoading={false}
+        project={mockProject}
+        projects={[mockProject]}
+      />
+    );
+    fireEvent.click(screen.getByLabelText(/Edit/));
+    expect(screen.getByRole('combobox', { name: /Edit project/i })).toBeInTheDocument();
+  });
+
+  it('should pass projectId to onEdit when edit is submitted', async () => {
+    mockHandlers.onEdit.mockResolvedValueOnce({});
+    render(
+      <TodoCard
+        todo={mockTodo}
+        {...mockHandlers}
+        isLoading={false}
+        project={mockProject}
+        projects={[mockProject]}
+      />
+    );
+    fireEvent.click(screen.getByLabelText(/Edit/));
+    fireEvent.click(screen.getByText('Save'));
+
+    await waitFor(() => {
+      expect(mockHandlers.onEdit).toHaveBeenCalledWith(
+        mockTodo.id,
+        mockTodo.title,
+        null,
+        1
+      );
+    });
   });
 });

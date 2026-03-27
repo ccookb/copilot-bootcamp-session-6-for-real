@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import TodoForm from './components/TodoForm';
 import TodoList from './components/TodoList';
 import ThemeToggle from './components/ThemeToggle';
 import ConfirmDialog from './components/ConfirmDialog';
+import ProjectsPanel from './components/ProjectsPanel';
+import ProjectFilterBar from './components/ProjectFilterBar';
 import TodoService from './services/todoService';
+import ProjectService from './services/projectService';
 import './App.css';
 
 function App() {
@@ -21,6 +24,9 @@ function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingTodoId, setDeletingTodoId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentView, setCurrentView] = useState('todos');
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   // Initialize theme on mount
   useEffect(() => {
@@ -28,9 +34,10 @@ function App() {
     localStorage.setItem('todoAppTheme', theme);
   }, [theme]);
 
-  // Fetch todos on mount
+  // Fetch todos and projects on mount
   useEffect(() => {
     fetchTodos();
+    fetchProjects();
   }, []);
 
   const fetchTodos = async () => {
@@ -47,9 +54,18 @@ function App() {
     }
   };
 
-  const handleCreateTodo = async (title, dueDate) => {
+  const fetchProjects = async () => {
     try {
-      const newTodo = await TodoService.createTodo(title, dueDate);
+      const data = await ProjectService.getAllProjects();
+      setProjects(data);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
+  };
+
+  const handleCreateTodo = async (title, dueDate, projectId) => {
+    try {
+      const newTodo = await TodoService.createTodo(title, dueDate, projectId || null);
       setTodos([newTodo, ...todos]);
       setError(null);
     } catch (err) {
@@ -70,9 +86,9 @@ function App() {
     }
   };
 
-  const handleEditTodo = async (todoId, title, dueDate) => {
+  const handleEditTodo = async (todoId, title, dueDate, projectId) => {
     try {
-      const updatedTodo = await TodoService.updateTodo(todoId, title, dueDate);
+      const updatedTodo = await TodoService.updateTodo(todoId, title, dueDate, projectId);
       setTodos(todos.map(todo => (todo.id === todoId ? updatedTodo : todo)));
       setError(null);
     } catch (err) {
@@ -112,6 +128,13 @@ function App() {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
+  const displayedTodos = useMemo(
+    () => selectedProjectId
+      ? todos.filter(t => t.projectId === selectedProjectId)
+      : todos,
+    [todos, selectedProjectId]
+  );
+
   return (
     <div className="app">
       <header className="app-header">
@@ -120,38 +143,69 @@ function App() {
             <span className="app-icon">🎃</span>
             My Todos
           </h1>
-          <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
+          <div className="header-right">
+            <nav className="app-nav">
+              <button
+                className={`nav-tab${currentView === 'todos' ? ' nav-tab--active' : ''}`}
+                onClick={() => setCurrentView('todos')}
+              >
+                Todos
+              </button>
+              <button
+                className={`nav-tab${currentView === 'projects' ? ' nav-tab--active' : ''}`}
+                onClick={() => setCurrentView('projects')}
+              >
+                Projects
+              </button>
+            </nav>
+            <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
+          </div>
         </div>
       </header>
 
       <main className="app-main">
         <div className="app-container">
-          <TodoForm
-            onSubmit={handleCreateTodo}
-            isLoading={loading}
-          />
+          {currentView === 'projects' ? (
+            <ProjectsPanel projects={projects} onProjectsChange={fetchProjects} />
+          ) : (
+            <>
+              <TodoForm
+                onSubmit={handleCreateTodo}
+                isLoading={loading}
+                projects={projects}
+                defaultProjectId={selectedProjectId}
+              />
 
-          {error && (
-            <div className="app-error">
-              <p>{error}</p>
-              <button onClick={() => setError(null)} className="btn-close">✕</button>
-            </div>
-          )}
+              {error && (
+                <div className="app-error">
+                  <p>{error}</p>
+                  <button onClick={() => setError(null)} className="btn-close">✕</button>
+                </div>
+              )}
 
-          {loading && (
-            <div className="loading-state">
-              <p>Loading your todos...</p>
-            </div>
-          )}
+              <ProjectFilterBar
+                projects={projects}
+                selectedProjectId={selectedProjectId}
+                onSelectProject={setSelectedProjectId}
+              />
 
-          {!loading && (
-            <TodoList
-              todos={todos}
-              onToggle={handleToggleTodo}
-              onEdit={handleEditTodo}
-              onDelete={handleDeleteTodo}
-              isLoading={isDeleting}
-            />
+              {loading && (
+                <div className="loading-state">
+                  <p>Loading your todos...</p>
+                </div>
+              )}
+
+              {!loading && (
+                <TodoList
+                  todos={displayedTodos}
+                  onToggle={handleToggleTodo}
+                  onEdit={handleEditTodo}
+                  onDelete={handleDeleteTodo}
+                  isLoading={isDeleting}
+                  projects={projects}
+                />
+              )}
+            </>
           )}
         </div>
       </main>

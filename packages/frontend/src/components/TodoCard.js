@@ -7,10 +7,11 @@ function computeIsOverdue(dueDate, completed, now) {
   return due < todayMidnight;
 }
 
-function TodoCard({ todo, onToggle, onEdit, onDelete, isLoading }) {
+function TodoCard({ todo, onToggle, onEdit, onDelete, isLoading, project, projects }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
   const [editDueDate, setEditDueDate] = useState(todo.dueDate || '');
+  const [editProjectId, setEditProjectId] = useState(todo.projectId || '');
   const [editError, setEditError] = useState(null);
   const [now, setNow] = useState(new Date());
 
@@ -38,6 +39,7 @@ function TodoCard({ todo, onToggle, onEdit, onDelete, isLoading }) {
     setIsEditing(false);
     setEditTitle(todo.title);
     setEditDueDate(todo.dueDate || '');
+    setEditProjectId(todo.projectId || '');
     setEditError(null);
   };
 
@@ -53,7 +55,12 @@ function TodoCard({ todo, onToggle, onEdit, onDelete, isLoading }) {
     }
 
     try {
-      await onEdit(todo.id, editTitle.trim(), editDueDate || null);
+      await onEdit(
+        todo.id,
+        editTitle.trim(),
+        editDueDate || null,
+        editProjectId ? parseInt(editProjectId, 10) : null
+      );
       setIsEditing(false);
       setEditError(null);
     } catch (err) {
@@ -99,6 +106,20 @@ function TodoCard({ todo, onToggle, onEdit, onDelete, isLoading }) {
             disabled={isLoading}
             aria-label="Edit due date"
           />
+          {projects && projects.length > 0 && (
+            <select
+              value={editProjectId}
+              onChange={(e) => setEditProjectId(e.target.value)}
+              className="form-input"
+              disabled={isLoading}
+              aria-label="Edit project"
+            >
+              <option value="">No project</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+            </select>
+          )}
           <div className="edit-actions">
             <button
               onClick={handleEditSubmit}
@@ -137,6 +158,17 @@ function TodoCard({ todo, onToggle, onEdit, onDelete, isLoading }) {
 
       <div className="todo-content">
         <h3 className="todo-title">{todo.title}</h3>
+        {project && (
+          <span
+            className="project-pill"
+            style={{
+              backgroundColor: `var(--project-color-${project.colour})`,
+              color: `var(--project-color-${project.colour}-text)`
+            }}
+          >
+            {project.title}
+          </span>
+        )}
         {isOverdue && <span className="overdue-badge">Overdue</span>}
         {todo.dueDate && (
           <p

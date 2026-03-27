@@ -115,6 +115,18 @@ const server = setupServer(
       ctx.status(200),
       ctx.json({ message: 'Todo deleted successfully', id: parseInt(req.params.id) })
     );
+  }),
+
+  rest.get('/api/projects', (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json([]));
+  }),
+
+  rest.post('/api/projects', (req, res, ctx) => {
+    const { title, colour } = req.body;
+    return res(
+      ctx.status(201),
+      ctx.json({ id: 1, title, colour, createdAt: new Date().toISOString() })
+    );
   })
 );
 
@@ -231,5 +243,56 @@ describe('App Component', () => {
     const themToggleAfter = screen.getByRole('button', { name: /Switch to light mode/ });
     fireEvent.click(themToggleAfter);
     expect(localStorage.getItem('todoAppTheme')).toBe('light');
+  });
+
+  test('renders Todos and Projects navigation tabs', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Todos' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Projects' })).toBeInTheDocument();
+    });
+  });
+
+  test('switches to Projects view when Projects tab is clicked', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Projects' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Projects' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('+ New Project')).toBeInTheDocument();
+    });
+  });
+
+  test('switches back to Todos view when Todos tab is clicked', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Projects' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Projects' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('+ New Project')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Todos' }));
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Add a new todo...')).toBeInTheDocument();
+    });
+  });
+
+  test('does not render ProjectFilterBar when no projects exist', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('group', { name: /Filter by project/i })).not.toBeInTheDocument();
+    });
   });
 });
